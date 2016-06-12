@@ -1956,6 +1956,7 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 				struct cpufreq_policy *new_policy)
 {
 	int ret = 0, failed = 1;
+	struct cpufreq_policy *cpu0_policy = NULL;
 
 	pr_debug("setting new policy for CPU %u: %u - %u kHz\n", new_policy->cpu,
 		new_policy->min, new_policy->max);
@@ -1993,8 +1994,14 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 			CPUFREQ_NOTIFY, new_policy);
 
-	policy->min = new_policy->min;
-	policy->max = new_policy->max;
+	if (new_policy->cpu) {
+		cpu0_policy = cpufreq_cpu_get(0);
+		policy->min = cpu0_policy->min;
+		policy->max = cpu0_policy->max;
+	} else {
+		policy->min = new_policy->min;
+		policy->max = new_policy->max;
+	}
 
 	pr_debug("new min and max freqs are %u - %u kHz\n",
 					policy->min, policy->max);
